@@ -20,6 +20,7 @@ export interface User {
 }
 
 export interface QuizSettings {
+  systemName?: string;
   timeLimit: Record<string, number>;
 }
 
@@ -69,6 +70,7 @@ const DEFAULT_USERS: User[] = [
 ];
 
 const DEFAULT_SETTINGS: QuizSettings = {
+  systemName: 'Excel Academy',
   timeLimit: {
     Basic: 15,
     Intermediate: 30,
@@ -115,6 +117,7 @@ const getDefaultData = (): DatabaseShape => ({
   users: cloneUsers(DEFAULT_USERS),
   results: [],
   settings: {
+    systemName: DEFAULT_SETTINGS.systemName,
     timeLimit: { ...DEFAULT_SETTINGS.timeLimit },
   },
 });
@@ -130,6 +133,7 @@ const normalizeApprovalStatus = (user: Partial<User>): UserApprovalStatus => {
 const normalizeData = (raw: any): DatabaseShape => {
   const base = getDefaultData();
   const timeLimit = raw?.settings?.timeLimit || {};
+  const rawSystemName = typeof raw?.settings?.systemName === 'string' ? raw.settings.systemName.trim() : '';
 
   return {
     users: Array.isArray(raw?.users) && raw.users.length > 0
@@ -145,6 +149,7 @@ const normalizeData = (raw: any): DatabaseShape => {
       : base.users,
     results: Array.isArray(raw?.results) ? cloneResults(raw.results) : [],
     settings: {
+      systemName: rawSystemName || DEFAULT_SETTINGS.systemName,
       timeLimit: {
         Basic: normalizeTimeLimitValue(timeLimit.Basic ?? timeLimit['Cơ bản'], base.settings.timeLimit.Basic),
         Intermediate: normalizeTimeLimitValue(timeLimit.Intermediate ?? timeLimit['Trung cấp'], base.settings.timeLimit.Intermediate),
@@ -240,6 +245,7 @@ const cloneData = (data: DatabaseShape): DatabaseShape => ({
   users: cloneUsers(data.users),
   results: cloneResults(data.results),
   settings: {
+    systemName: data.settings.systemName || DEFAULT_SETTINGS.systemName,
     timeLimit: { ...data.settings.timeLimit },
   },
 });
@@ -262,6 +268,7 @@ export const DB = {
       level: getNormalizedResultLevel(result.level),
     })),
   getSettings: (): QuizSettings => ({
+    systemName: getCachedData().settings.systemName || DEFAULT_SETTINGS.systemName,
     timeLimit: { ...getCachedData().settings.timeLimit },
   }),
   getUser: (id: string): User | undefined => {
@@ -423,7 +430,9 @@ export const DB = {
     return true;
   },
   updateSettings: async (settings: QuizSettings) => {
+    const rawSystemName = typeof settings?.systemName === 'string' ? settings.systemName.trim() : '';
     const nextSettings: QuizSettings = {
+      systemName: rawSystemName || getCachedData().settings.systemName || DEFAULT_SETTINGS.systemName,
       timeLimit: {
         Basic: normalizeTimeLimitValue(settings?.timeLimit?.Basic, DEFAULT_SETTINGS.timeLimit.Basic),
         Intermediate: normalizeTimeLimitValue(settings?.timeLimit?.Intermediate, DEFAULT_SETTINGS.timeLimit.Intermediate),

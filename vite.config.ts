@@ -32,6 +32,7 @@ type QuizResult = {
 }
 
 type QuizSettings = {
+  systemName?: string
   timeLimit: Record<string, number>
 }
 
@@ -71,6 +72,7 @@ const DEFAULT_DB: DatabaseShape = {
   ],
   results: [],
   settings: {
+    systemName: 'Excel Academy',
     timeLimit: {
       Basic: 15,
       Intermediate: 30,
@@ -95,6 +97,7 @@ const normalizeTimeLimitValue = (value: unknown, fallback: number) => {
 const normalizeDb = (raw: Partial<DatabaseShape> | null | undefined): DatabaseShape => {
   const base = cloneDb(DEFAULT_DB)
   const timeLimit = raw?.settings?.timeLimit || {}
+  const rawSystemName = typeof raw?.settings?.systemName === 'string' ? raw.settings.systemName.trim() : ''
   const users = Array.isArray(raw?.users) && raw.users.length > 0 ? raw.users : base.users
   const results = Array.isArray(raw?.results) ? raw.results : base.results
 
@@ -113,6 +116,7 @@ const normalizeDb = (raw: Partial<DatabaseShape> | null | undefined): DatabaseSh
     })),
     results: results.map((result) => ({ ...result })),
     settings: {
+      systemName: rawSystemName || base.settings.systemName,
       timeLimit: {
         Basic: normalizeTimeLimitValue(timeLimit.Basic, base.settings.timeLimit.Basic),
         Intermediate: normalizeTimeLimitValue(timeLimit.Intermediate, base.settings.timeLimit.Intermediate),
@@ -237,7 +241,9 @@ const applyMutation = (db: DatabaseShape, request: MutationRequest) => {
       break
     }
     case 'updateSettings': {
+      const rawName = typeof request.payload.settings?.systemName === 'string' ? request.payload.settings.systemName.trim() : ''
       nextDb.settings = {
+        systemName: rawName || nextDb.settings.systemName || DEFAULT_DB.settings.systemName,
         timeLimit: {
           Basic: normalizeTimeLimitValue(request.payload.settings?.timeLimit?.Basic, DEFAULT_DB.settings.timeLimit.Basic),
           Intermediate: normalizeTimeLimitValue(request.payload.settings?.timeLimit?.Intermediate, DEFAULT_DB.settings.timeLimit.Intermediate),

@@ -36,6 +36,7 @@ export interface QuizResult {
 }
 
 export interface QuizSettings {
+  systemName?: string;
   timeLimit: Record<string, number>;
 }
 
@@ -55,6 +56,7 @@ export interface CloudflareEnv {
 const KV_KEY = 'hiras_excel_db_v2';
 
 const defaultSettings: QuizSettings = {
+  systemName: 'Excel Academy',
   timeLimit: {
     Basic: 15,
     Intermediate: 30,
@@ -64,13 +66,17 @@ const defaultSettings: QuizSettings = {
 
 const normalizeUserId = (value: string) => value.trim().toLocaleLowerCase('vi-VN');
 
-export const normalizeSettings = (settings?: Partial<QuizSettings>): QuizSettings => ({
-  timeLimit: {
-    Basic: Math.max(1, Number(settings?.timeLimit?.Basic ?? defaultSettings.timeLimit.Basic)),
-    Intermediate: Math.max(1, Number(settings?.timeLimit?.Intermediate ?? defaultSettings.timeLimit.Intermediate)),
-    Advanced: Math.max(1, Number(settings?.timeLimit?.Advanced ?? defaultSettings.timeLimit.Advanced)),
-  },
-});
+export const normalizeSettings = (settings?: Partial<QuizSettings>): QuizSettings => {
+  const rawName = typeof settings?.systemName === 'string' ? settings.systemName.trim() : '';
+  return {
+    systemName: rawName || defaultSettings.systemName,
+    timeLimit: {
+      Basic: Math.max(1, Number(settings?.timeLimit?.Basic ?? defaultSettings.timeLimit.Basic)),
+      Intermediate: Math.max(1, Number(settings?.timeLimit?.Intermediate ?? defaultSettings.timeLimit.Intermediate)),
+      Advanced: Math.max(1, Number(settings?.timeLimit?.Advanced ?? defaultSettings.timeLimit.Advanced)),
+    },
+  };
+};
 
 export const normalizeDbState = (raw?: Partial<DbState> | null): DbState => ({
   users: Array.isArray(raw?.users) && raw.users.length > 0

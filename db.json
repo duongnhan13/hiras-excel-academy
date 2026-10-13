@@ -18,6 +18,7 @@
   ],
   "results": [],
   "settings": {
+    "systemName": "Excel Academy",
     "timeLimit": {
       "Basic": 15,
       "Intermediate": 30,
