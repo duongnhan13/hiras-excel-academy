@@ -7,6 +7,7 @@ type User = {
   name: string
   role: 'admin' | 'user'
   status?: 'pending' | 'approved' | 'rejected'
+  activeDomain?: 'accounting' | 'sales' | 'inventory' | 'hr_ops'
   createdAt?: string
   permissions: {
     canTakeBasic: boolean
@@ -23,6 +24,7 @@ type QuizResult = {
   id: string
   userId: string
   level: string
+  domain?: 'accounting' | 'sales' | 'inventory' | 'hr_ops'
   score: number
   total: number
   date: string
@@ -42,6 +44,7 @@ type DatabaseShape = {
 type MutationRequest =
   | { type: 'addUser'; payload: { user: User } }
   | { type: 'updateUserStatus'; payload: { id: string; status: 'pending' | 'approved' | 'rejected' } }
+  | { type: 'updateUserDomain'; payload: { id: string; activeDomain: 'accounting' | 'sales' | 'inventory' | 'hr_ops' } }
   | { type: 'updateUserPermissions'; payload: { id: string; permissions: User['permissions'] } }
   | { type: 'updateUserPassword'; payload: { id: string; password: string } }
   | { type: 'lockUser'; payload: { id: string; level: string; lockDays: number; nextCount: number; expiresAt: string } }
@@ -56,34 +59,12 @@ const DEFAULT_DB: DatabaseShape = {
   users: [
     {
       id: 'admin',
-      name: 'Quan tri vien',
+      name: 'Quản trị viên',
       role: 'admin',
       status: 'approved',
       permissions: { canTakeBasic: true, canTakeIntermediate: true, canTakeAdvanced: true },
       progress: [],
       password: 'admin',
-      lockOuts: {},
-      lockOutCounts: {},
-    },
-    {
-      id: 'NV001',
-      name: 'Nguyen Van A',
-      role: 'user',
-      status: 'approved',
-      permissions: { canTakeBasic: true, canTakeIntermediate: false, canTakeAdvanced: false },
-      progress: [],
-      password: '123',
-      lockOuts: {},
-      lockOutCounts: {},
-    },
-    {
-      id: 'NV002',
-      name: 'Tran Thi B',
-      role: 'user',
-      status: 'approved',
-      permissions: { canTakeBasic: true, canTakeIntermediate: true, canTakeAdvanced: false },
-      progress: [],
-      password: '123',
       lockOuts: {},
       lockOutCounts: {},
     },
@@ -201,6 +182,13 @@ const applyMutation = (db: DatabaseShape, request: MutationRequest) => {
       const user = nextDb.users.find((item) => item.id === request.payload.id)
       if (user && user.role !== 'admin') {
         user.status = request.payload.status
+      }
+      break
+    }
+    case 'updateUserDomain': {
+      const user = nextDb.users.find((item) => item.id === request.payload.id)
+      if (user) {
+        user.activeDomain = request.payload.activeDomain
       }
       break
     }

@@ -11,7 +11,7 @@ export const onRequestPost = async (context: { request: Request; env: Cloudflare
     const current = await readCloudDb(context.env);
     const updated = applyCloudMutation(current, payload);
     const saved = await writeCloudDb(context.env, updated);
-    return new Response(JSON.stringify({ success: true, data: saved }), {
+    return new Response(JSON.stringify(saved), {
       status: 200,
       headers: jsonHeaders,
     });

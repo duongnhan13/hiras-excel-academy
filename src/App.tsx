@@ -29,6 +29,7 @@ import {
   Trash2,
   Settings,
   UserCheck,
+  GraduationCap,
   Zap as ZapIcon
 } from 'lucide-react';
 import { EXCEL_QUESTIONS, STUDY_CHAPTERS, Level, LevelLabels, Question, StudyChapter, StudySection } from './data/excelData';
@@ -79,61 +80,105 @@ const formatLockUntil = (expiresAt: string) =>
 
 // --- Components ---
 
-const Navbar = ({ onNav, user, onLogout }: { onNav: (view: any) => void, user: User | null, onLogout: () => void }) => (
-  <nav className="glass-card" style={{ 
-    margin: '1.5rem', 
-    padding: '1rem 2rem', 
-    display: 'flex', 
-    justifyContent: 'space-between', 
-    alignItems: 'center',
-    position: 'sticky',
-    top: '1.5rem',
-    zIndex: 100
-  }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }} onClick={() => onNav('home')}>
-      <div style={{ 
-        background: 'var(--primary)', 
-        padding: '0.5rem', 
-        borderRadius: '0.75rem',
-        color: 'white'
-      }}>
-        <FileSpreadsheet size={24} />
-      </div>
-      <h2 style={{ fontSize: '1.25rem', margin: 0 }}>ExcelAssessment</h2>
-    </div>
-    
-    {user && (
-      <div style={{ display: 'flex', gap: '1.5rem', fontWeight: 600, color: 'var(--text-muted)', alignItems: 'center', flexWrap: 'wrap' }}>
-        <button onClick={() => onNav('home')} style={{ background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', color: 'inherit' }}>Trang chủ</button>
-        <button onClick={() => onNav('study')} style={{ background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', color: 'inherit' }}>Tài liệu Ôn luyện</button>
-        <button onClick={() => onNav('lab')} style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', padding: '0.4rem 0.85rem', borderRadius: '0.6rem', fontWeight: 700, cursor: 'pointer', color: '#059669', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <Terminal size={16} /> Thực hành Công thức
-        </button>
-        <button onClick={() => onNav('lessons')} style={{ background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', color: 'inherit' }}>Làm bài Test</button>
-        <button onClick={() => onNav('profile')} style={{ background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', color: 'inherit' }}>Đánh giá Năng lực</button>
-        
-        {user.role === 'admin' && (
-          <button onClick={() => onNav('admin')} style={{ background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', color: 'var(--secondary)' }}>
-            Quản trị Hệ thống
-          </button>
-        )}
-        <button onClick={() => onNav('leaderboard')} style={{ background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', color: '#f59e0b' }}>
-          🏆 Bảng Xếp Hạng
-        </button>
-
-        <div style={{ width: '1px', height: '24px', background: 'var(--border)' }}></div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
-          <UserCircle2 size={20} />
-          <span>{user.name} ({user.id})</span>
-          <button onClick={onLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', marginLeft: '0.5rem' }} title="Đăng xuất">
-            <LogOut size={18} />
-          </button>
+const Navbar = ({
+  onNav,
+  user,
+  activeDomain,
+  onLogout,
+}: {
+  onNav: (view: any) => void;
+  user: User | null;
+  activeDomain?: PracticeDomain;
+  onLogout: () => void;
+}) => {
+  const domMeta = activeDomain ? PRACTICE_DOMAINS[activeDomain] : null;
+  return (
+    <nav className="glass-card" style={{ 
+      margin: '1.5rem', 
+      padding: '1rem 2rem', 
+      display: 'flex', 
+      justifyContent: 'space-between', 
+      alignItems: 'center',
+      position: 'sticky',
+      top: '1.5rem',
+      zIndex: 100
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', cursor: 'pointer' }} onClick={() => onNav('home')}>
+        <div style={{ 
+          background: 'linear-gradient(135deg, #059669 0%, #064e3b 100%)', 
+          padding: '0.6rem', 
+          borderRadius: '0.85rem',
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 6px 14px rgba(5, 150, 105, 0.25)'
+        }}>
+          <GraduationCap size={26} />
+        </div>
+        <div>
+          <h2 style={{ fontSize: '1.25rem', margin: 0, lineHeight: 1.1 }}>Hiras Excel Academy</h2>
+          <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.15rem' }}>
+            Học Viện Đào Tạo & Sát Hạch Thực Chiến
+          </div>
         </div>
       </div>
-    )}
-  </nav>
-);
+      
+      {user && (
+        <div style={{ display: 'flex', gap: '1.25rem', fontWeight: 600, color: 'var(--text-muted)', alignItems: 'center', flexWrap: 'wrap' }}>
+          {domMeta && (
+            <button
+              onClick={() => onNav('home')}
+              title="Nhánh chuyên ngành đang theo học xuyên suốt (Bấm để xem lộ trình hoặc đổi nhánh)"
+              style={{
+                background: `${domMeta.color}12`,
+                border: `1.5px solid ${domMeta.color}`,
+                color: domMeta.color,
+                padding: '0.38rem 0.85rem',
+                borderRadius: '999px',
+                fontWeight: 800,
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+              }}
+            >
+              <span>{domMeta.badge}</span>
+              <span>Nhánh: {domMeta.shortName}</span>
+            </button>
+          )}
+          <button onClick={() => onNav('home')} style={{ background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', color: 'inherit' }}>Lộ trình Nhánh</button>
+          <button onClick={() => onNav('study')} style={{ background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', color: 'inherit' }}>Tài liệu Ôn luyện</button>
+          <button onClick={() => onNav('lab')} style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', padding: '0.4rem 0.85rem', borderRadius: '0.6rem', fontWeight: 700, cursor: 'pointer', color: '#059669', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <Terminal size={16} /> Thực hành Công thức
+          </button>
+          <button onClick={() => onNav('lessons')} style={{ background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', color: 'inherit' }}>Thi Sát hạch</button>
+          <button onClick={() => onNav('profile')} style={{ background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', color: 'inherit' }}>Chứng nhận Nhánh</button>
+          
+          {user.role === 'admin' && (
+            <button onClick={() => onNav('admin')} style={{ background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', color: 'var(--secondary)' }}>
+              Quản trị Hệ thống
+            </button>
+          )}
+          <button onClick={() => onNav('leaderboard')} style={{ background: 'none', border: 'none', fontWeight: 600, cursor: 'pointer', color: '#f59e0b' }}>
+            🏆 Bảng Xếp Hạng
+          </button>
+
+          <div style={{ width: '1px', height: '24px', background: 'var(--border)' }}></div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
+            <UserCircle2 size={20} />
+            <span>{user.name} ({user.id})</span>
+            <button onClick={onLogout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', marginLeft: '0.5rem' }} title="Đăng xuất">
+              <LogOut size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+};
 
 const LoginView = ({ onLogin }: { onLogin: (user: User) => void }) => {
   const [isRegister, setIsRegister] = useState(false);
@@ -197,8 +242,8 @@ const LoginView = ({ onLogin }: { onLogin: (user: User) => void }) => {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="container" style={{ padding: '8rem 0', display: 'flex', justifyContent: 'center' }}>
       <div className="glass-card" style={{ padding: '3rem', maxWidth: '440px', width: '100%', textAlign: 'center' }}>
-        <div style={{ background: 'var(--primary)', color: 'white', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-          <UserCircle2 size={32} />
+        <div style={{ background: 'linear-gradient(135deg, #059669 0%, #064e3b 100%)', color: 'white', width: '68px', height: '68px', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', boxShadow: '0 8px 20px rgba(5, 150, 105, 0.25)' }}>
+          <GraduationCap size={36} />
         </div>
         <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>{isRegister ? 'Đăng Ký Tài Khoản Học & Thi' : 'Đăng nhập Hệ thống'}</h2>
         <p style={{ color: 'var(--text-muted)', marginBottom: '1.75rem', fontSize: '0.875rem', lineHeight: 1.5 }}>
@@ -749,11 +794,15 @@ const parseContent = (content: string) => {
 
 const StudyView = ({
   user,
+  activeDomain,
+  onSelectDomain,
   onToggleProgress,
   onGoToQuiz,
   onOpenFormulaLab,
 }: {
   user: User;
+  activeDomain: PracticeDomain;
+  onSelectDomain: (domain: PracticeDomain) => void;
   onToggleProgress: (sectionId: string) => void;
   onGoToQuiz: () => void;
   onOpenFormulaLab: (domain: PracticeDomain, level: Level) => void;
@@ -762,8 +811,12 @@ const StudyView = ({
   const fallbackSection = unlockedChapters[0]?.sections[0]?.id || STUDY_CHAPTERS[0].sections[0].id;
   const sectionStorageKey = getStudySectionKey(user.id);
   const [activeSection, setActiveSection] = useState<string>(() => localStorage.getItem(sectionStorageKey) || fallbackSection);
-  const [selectedPracticeDomain, setSelectedPracticeDomain] = useState<PracticeDomain>('accounting');
+  const [selectedPracticeDomain, setSelectedPracticeDomain] = useState<PracticeDomain>(activeDomain);
   const [showDomainSolutions, setShowDomainSolutions] = useState(false);
+
+  useEffect(() => {
+    setSelectedPracticeDomain(activeDomain);
+  }, [activeDomain]);
 
   useEffect(() => {
     localStorage.setItem(sectionStorageKey, activeSection);
@@ -875,10 +928,10 @@ const StudyView = ({
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
                       <div>
                         <div style={{ fontSize: '0.8rem', fontWeight: 800, color: activeDomainMeta.color, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.35rem' }}>
-                          🎯 BÀI TẬP TÌNH HUỐNG ĐA NGÀNH — CẤP ĐỘ {LevelLabels[activeChap.level].toUpperCase()}
+                          🎯 NHÁNH ÔN LUYỆN XUYÊN SUỐT: {activeDomainMeta.name.toUpperCase()} — CẤP ĐỘ {LevelLabels[activeChap.level].toUpperCase()}
                         </div>
                         <h3 style={{ fontSize: '1.35rem', margin: 0, color: '#0f172a' }}>
-                          Chuyển đổi bối cảnh thực hành theo vị trí công việc của bạn
+                          Bài tập tình huống thực tế của nhánh {activeDomainMeta.shortName}
                         </h3>
                       </div>
                       <button
@@ -906,6 +959,7 @@ const StudyView = ({
                             key={dom.id}
                             onClick={() => {
                               setSelectedPracticeDomain(dom.id);
+                              onSelectDomain(dom.id);
                               setShowDomainSolutions(false);
                             }}
                             style={{
@@ -1032,7 +1086,7 @@ const StudyView = ({
                   </button>
                   {activeChap && canStartActiveLevelQuiz ? (
                     <button className="btn btn-primary" onClick={onGoToQuiz} style={{ padding: '1rem 2rem', fontSize: '1.1rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <TrendingUp size={20} /> Làm bài thi {LevelLabels[activeChap.level]} ngay
+                      <TrendingUp size={20} /> Làm bài thi {LevelLabels[activeChap.level]} ({activeDomainMeta.shortName}) →
                     </button>
                   ) : null}
                 </div>
@@ -1049,9 +1103,11 @@ const StudyView = ({
 const FormulaLabView = ({
   initialDomain = 'accounting',
   initialLevel = 'Basic',
+  onSelectDomain,
 }: {
   initialDomain?: PracticeDomain;
   initialLevel?: Level;
+  onSelectDomain?: (domain: PracticeDomain) => void;
 }) => {
   const [selectedDomain, setSelectedDomain] = useState<PracticeDomain>(initialDomain);
   const [selectedLevel, setSelectedLevel] = useState<Level>(initialLevel);
@@ -1113,12 +1169,12 @@ const FormulaLabView = ({
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="container" style={{ padding: '2.5rem 0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
         <div>
-          <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>
-            ⚡ PHÒNG LAB THỰC HÀNH GÕ CÔNG THỨC TRỰC TIẾP
+          <div style={{ fontSize: '0.85rem', fontWeight: 800, color: domainMeta.color, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>
+            ⚡ PHÒNG LAB CÔNG THỨC — NHÁNH XUYÊN SUỐT: {domainMeta.name.toUpperCase()}
           </div>
-          <h1 style={{ fontSize: '2.25rem', margin: 0 }}>Mô phỏng Bảng tính Excel Thực chiến</h1>
+          <h1 style={{ fontSize: '2.25rem', margin: 0 }}>Mô phỏng Bảng tính Excel Thực chiến ({domainMeta.shortName})</h1>
           <p style={{ color: 'var(--text-muted)', marginTop: '0.4rem', marginBottom: 0 }}>
-            Chọn mảng nghiệp vụ và cấp độ, quan sát tọa độ ô trên bảng mẫu và gõ trực tiếp công thức bắt đầu bằng dấu <code>=</code> để hệ thống chấm và bắt lỗi tự động.
+            Thực hành gõ công thức từ Cơ bản đến Nâng cao theo nhánh <strong>{domainMeta.name}</strong>. Bạn có thể chuyển nhánh bất cứ lúc nào sau khi hoàn thành.
           </p>
         </div>
         <div className="glass-card" style={{ padding: '0.85rem 1.25rem', background: '#ecfdf5', border: '1px solid #a7f3d0' }}>
@@ -1135,7 +1191,10 @@ const FormulaLabView = ({
           return (
             <button
               key={dom.id}
-              onClick={() => setSelectedDomain(dom.id)}
+              onClick={() => {
+                setSelectedDomain(dom.id);
+                if (onSelectDomain) onSelectDomain(dom.id);
+              }}
               className="glass-card"
               style={{
                 padding: '1.1rem 1.25rem',
@@ -1150,7 +1209,7 @@ const FormulaLabView = ({
                 <span style={{ fontSize: '1.4rem' }}>{dom.badge}</span>
                 {isSelected && (
                   <span style={{ fontSize: '0.72rem', fontWeight: 800, padding: '0.2rem 0.55rem', borderRadius: '999px', background: dom.color, color: 'white' }}>
-                    ĐANG CHỌN
+                    NHÁNH ĐANG CHỌN
                   </span>
                 )}
               </div>
@@ -1800,34 +1859,140 @@ const Quiz = ({
   );
 };
 
-const ProfileView = ({ user, stats }: { user: User, stats: QuizResult[] }) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="container" style={{ padding: '4rem 0' }}>
-    <div className="glass-card" style={{ padding: '3rem', marginBottom: '3rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '3rem' }}>
-            <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '2rem', fontWeight: 700 }}>{user.name.substring(0, 2).toUpperCase()}</div>
-            <div>
-                <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>{user.name}</h1>
-                <p style={{ color: 'var(--text-muted)' }}>Mã NV: {user.id}</p>
+const ProfileView = ({
+  user,
+  stats,
+  activeDomain,
+  onSelectDomain,
+}: {
+  user: User;
+  stats: QuizResult[];
+  activeDomain: PracticeDomain;
+  onSelectDomain: (dom: PracticeDomain) => void;
+}) => {
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="container" style={{ padding: '3.5rem 0' }}>
+      <div className="glass-card" style={{ padding: '2.5rem', marginBottom: '2.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '2.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <div style={{ width: '76px', height: '76px', borderRadius: '1.25rem', background: 'linear-gradient(135deg, #059669 0%, #064e3b 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.85rem', fontWeight: 800 }}>
+              {user.name.substring(0, 2).toUpperCase()}
             </div>
+            <div>
+              <h1 style={{ fontSize: '2rem', marginBottom: '0.35rem' }}>{user.name}</h1>
+              <p style={{ color: 'var(--text-muted)', margin: 0 }}>
+                Mã NV: <strong>{user.id}</strong> • Nhánh đang theo học xuyên suốt:{' '}
+                <strong style={{ color: PRACTICE_DOMAINS[activeDomain].color }}>
+                  {PRACTICE_DOMAINS[activeDomain].badge} {PRACTICE_DOMAINS[activeDomain].name}
+                </strong>
+              </p>
+            </div>
+          </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-            {(['Basic', 'Intermediate', 'Advanced'] as Level[]).map(lvl => {
-                const levelResults = stats.filter(s => s.level === lvl);
-                const bestResult = levelResults.length > 0 ? [...levelResults].sort((a, b) => b.score - a.score || (a.timeTaken||0) - (b.timeTaken||0))[0] : null;
-                const score = bestResult ? bestResult.score : 0;
-                const total = NUM_QUESTIONS[lvl];
-                return (
-                    <div key={lvl} className="glass-card" style={{ padding: '1.5rem', background: score >= total * 0.8 ? '#f0fdf4' : 'white' }}>
-                        <h4 style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Excel {LevelLabels[lvl]}</h4>
-                        <div style={{ fontSize: '2.5rem', fontWeight: 800, color: score >= total * 0.8 ? '#10b981' : 'var(--text-main)' }}>{score}/{total}</div>
-                        {bestResult && <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>⏱ {Math.floor(bestResult.timeTaken/60)}m {bestResult.timeTaken%60}s</p>}
-                    </div>
-                );
-            })}
+
+        <h3 style={{ marginBottom: '1rem', fontSize: '1.25rem' }}>
+          🎯 Lộ Trình Hoàn Thành Từng Nhánh Chuyên Ngành (4 Nhánh)
+        </h3>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', marginBottom: '1.5rem' }}>
+          Bạn có thể đi xuyên suốt để hoàn thành trọn vẹn 3 cấp độ (Cơ bản → Trung cấp → Nâng cao) của 1 nhánh, sau đó chuyển sang chinh phục nhánh tiếp theo.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
+          {DOMAIN_LIST.map((dom) => {
+            const isCurrent = dom.id === activeDomain;
+            const domResults = stats.filter((s) => (s.domain || 'accounting') === dom.id);
+            const levels: Level[] = ['Basic', 'Intermediate', 'Advanced'];
+            const passedLevels = levels.filter((lvl) =>
+              domResults.some((r) => r.level === lvl && r.score >= NUM_QUESTIONS[lvl] * 0.8)
+            );
+            const isBranchCompleted = passedLevels.length === 3;
+
+            return (
+              <div
+                key={dom.id}
+                className="glass-card"
+                style={{
+                  padding: '1.5rem',
+                  border: isCurrent ? `2.5px solid ${dom.color}` : '1px solid var(--border)',
+                  background: isBranchCompleted ? '#f0fdf4' : isCurrent ? `${dom.color}08` : 'white',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                    <span style={{ fontSize: '1.6rem' }}>{dom.badge}</span>
+                    {isBranchCompleted ? (
+                      <span style={{ padding: '0.25rem 0.65rem', borderRadius: '999px', background: '#16a34a', color: 'white', fontSize: '0.72rem', fontWeight: 800 }}>
+                        🏆 ĐÃ HOÀN THÀNH NHÁNH
+                      </span>
+                    ) : isCurrent ? (
+                      <span style={{ padding: '0.25rem 0.65rem', borderRadius: '999px', background: dom.color, color: 'white', fontSize: '0.72rem', fontWeight: 800 }}>
+                        ĐANG THEO HỌC
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b' }}>
+                        {passedLevels.length}/3 cấp độ
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontWeight: 800, fontSize: '1.08rem', color: dom.color, marginBottom: '0.75rem' }}>
+                    {dom.name}
+                  </div>
+                  <div style={{ display: 'grid', gap: '0.45rem', marginBottom: '1.25rem' }}>
+                    {levels.map((lvl) => {
+                      const lvlRes = domResults
+                        .filter((r) => r.level === lvl)
+                        .sort((a, b) => b.score - a.score || (a.timeTaken || 0) - (b.timeTaken || 0))[0];
+                      const total = NUM_QUESTIONS[lvl];
+                      const passed = lvlRes && lvlRes.score >= total * 0.8;
+                      return (
+                        <div
+                          key={lvl}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '0.45rem 0.7rem',
+                            borderRadius: '0.5rem',
+                            background: passed ? '#dcfce7' : '#f8fafc',
+                            fontSize: '0.84rem',
+                          }}
+                        >
+                          <span style={{ fontWeight: 700, color: passed ? '#166534' : '#475569' }}>
+                            {passed ? '✓ ' : '○ '}Excel {LevelLabels[lvl]}
+                          </span>
+                          <strong style={{ color: passed ? '#15803d' : '#64748b' }}>
+                            {lvlRes ? `${lvlRes.score}/${total} điểm` : 'Chưa thi'}
+                          </strong>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <button
+                  onClick={() => onSelectDomain(dom.id)}
+                  className="btn"
+                  style={{
+                    width: '100%',
+                    padding: '0.6rem',
+                    fontSize: '0.85rem',
+                    fontWeight: 700,
+                    background: isCurrent ? dom.color : '#f1f5f9',
+                    color: isCurrent ? 'white' : '#334155',
+                  }}
+                >
+                  {isCurrent ? '✓ Đang là nhánh xuyên suốt' : 'Chọn học nhánh này →'}
+                </button>
+              </div>
+            );
+          })}
         </div>
-    </div>
-  </motion.div>
-);
+      </div>
+    </motion.div>
+  );
+};
 
 const Leaderboard = ({ currentUserId }: { currentUserId: string }) => {
   const [ranked, setRanked] = useState<any[]>([]);
@@ -2308,7 +2473,8 @@ const App = () => {
   const [dbReady, setDbReady] = useState(false);
   const [view, setView] = useState<'home' | 'study' | 'lab' | 'lessons' | 'quiz' | 'profile' | 'admin' | 'leaderboard'>('home');
   const [currentQuizLevel, setCurrentQuizLevel] = useState<Level | null>(null);
-  const [selectedQuizDomain, setSelectedQuizDomain] = useState<PracticeDomain | 'all'>('all');
+  const [activeDomain, setActiveDomain] = useState<PracticeDomain>('accounting');
+  const [selectedQuizDomain, setSelectedQuizDomain] = useState<PracticeDomain | 'all'>('accounting');
   const [labConfig, setLabConfig] = useState<{ domain: PracticeDomain; level: Level }>({
     domain: 'accounting',
     level: 'Basic',
@@ -2316,6 +2482,25 @@ const App = () => {
   const clearStoredSession = () => {
     localStorage.removeItem('hiras_current_user');
     localStorage.removeItem('hiras_current_view');
+  };
+
+  const syncDomainState = (dom: PracticeDomain) => {
+    setActiveDomain(dom);
+    setSelectedQuizDomain(dom);
+    setLabConfig((prev) => ({ ...prev, domain: dom }));
+  };
+
+  const handleSelectDomain = async (dom: PracticeDomain, navigateTo?: 'home' | 'study' | 'lab' | 'lessons') => {
+    syncDomainState(dom);
+    if (user) {
+      const updated = await DB.updateUserDomain(user.id, dom);
+      const nextUser = updated || { ...user, activeDomain: dom };
+      setUser(nextUser);
+      localStorage.setItem('hiras_current_user', JSON.stringify(nextUser));
+    }
+    if (navigateTo) {
+      setView(navigateTo);
+    }
   };
 
   useEffect(() => {
@@ -2337,6 +2522,9 @@ const App = () => {
               }
               setDbReady(true);
               return;
+          }
+          if (u.activeDomain) {
+            syncDomainState(u.activeDomain);
           }
           const results = DB.getUserResults(u.id);
           
@@ -2407,7 +2595,14 @@ const App = () => {
     };
   }, [user]);
 
-  const handleLogin = (u: User) => { setUser(u); setView(u.role === 'admin' ? 'admin' : 'home'); localStorage.setItem('hiras_current_user', JSON.stringify(u)); };
+  const handleLogin = (u: User) => {
+    setUser(u);
+    if (u.activeDomain) {
+      syncDomainState(u.activeDomain);
+    }
+    setView(u.role === 'admin' ? 'admin' : 'home');
+    localStorage.setItem('hiras_current_user', JSON.stringify(u));
+  };
   const handleLogout = () => { setUser(null); setCurrentQuizLevel(null); setView('home'); clearStoredSession(); };
   const handleToggleProgress = async (id: string) => {
     if (user) {
@@ -2434,8 +2629,18 @@ const App = () => {
         }
         const total = NUM_QUESTIONS[currentQuizLevel];
         const passed = score >= total * 0.8;
+        const quizDom: PracticeDomain = selectedQuizDomain === 'all' ? activeDomain : selectedQuizDomain;
         
-        await DB.saveResult({ id: Date.now().toString(), userId: user.id, level: currentQuizLevel, score, total, date: new Date().toISOString(), timeTaken: time });
+        await DB.saveResult({
+          id: Date.now().toString(),
+          userId: user.id,
+          level: currentQuizLevel,
+          domain: quizDom,
+          score,
+          total,
+          date: new Date().toISOString(),
+          timeTaken: time,
+        });
         localStorage.removeItem(getQuizSessionKey(user.id, currentQuizLevel, selectedQuizDomain));
 
         if (passed) {
@@ -2491,97 +2696,238 @@ const App = () => {
   if (!user) return <div style={{ minHeight: '100vh', position: 'relative' }}><Navbar onNav={()=>{}} user={null} onLogout={()=>{}} /><LoginView onLogin={handleLogin} /></div>;
 
   const userStats = DB.getUserResults(user.id);
+  const currentDomMeta = PRACTICE_DOMAINS[activeDomain];
 
-  return (
-    <div style={{ minHeight: '100vh', position: 'relative' }}>
-      <Navbar onNav={setView} user={user} onLogout={handleLogout} />
-      <AnimatePresence mode="wait">
-        {view === 'home' && (
-          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="container" style={{ padding: '4.5rem 0', textAlign: 'center' }}>
-            <h1 style={{ fontSize: '3.75rem', marginBottom: '1rem' }}>Đánh giá & Thực hành <span style={{ color: 'var(--primary)' }}>Excel Thực Chiến</span></h1>
-            <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem', maxWidth: '760px', margin: '0 auto 2.5rem', lineHeight: 1.6 }}>
-              Hệ thống bài tập thực tế đa ngành: <strong>Kế toán - Tài chính</strong>, <strong>Sales & Kinh doanh</strong>, <strong>Kho vận - Mua hàng</strong> và <strong>Nhân sự - Tiền lương</strong> kèm Phòng Lab gõ công thức trực tiếp.
-            </p>
-            <div style={{ display: 'flex', gap: '1.25rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '3.5rem' }}>
-              <button className="btn btn-primary" onClick={() => setView('lessons')}>Làm bài Test (248 câu hỏi)</button>
-              <button
-                className="btn"
-                style={{ background: '#ecfdf5', color: '#059669', border: '2px solid #10b981', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                onClick={() => setView('lab')}
-              >
-                <Terminal size={18} /> Thực hành Gõ công thức (24 bài Lab)
-              </button>
-              <button className="btn" style={{ border: '1px solid var(--border)' }} onClick={() => setView('study')}>Tài liệu & Case Study Ôn luyện</button>
+  // Nếu học viên mới chưa chọn nhánh chuyên ngành xuyên suốt -> hiện màn hình Chọn Nhánh Khởi Đầu
+  if (user.role !== 'admin' && !user.activeDomain) {
+    return (
+      <div style={{ minHeight: '100vh', position: 'relative' }}>
+        <Navbar onNav={setView} user={user} onLogout={handleLogout} />
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="container" style={{ padding: '3.5rem 0', maxWidth: '980px' }}>
+          <div className="glass-card" style={{ padding: '3rem', textAlign: 'center' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.45rem 1rem', borderRadius: '999px', background: '#ecfdf5', color: '#059669', fontWeight: 800, fontSize: '0.82rem', marginBottom: '1rem' }}>
+              <GraduationCap size={18} /> BƯỚC KHỞI ĐẦU LỘ TRÌNH HỌC & SÁT HẠCH
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', textAlign: 'left', maxWidth: '1080px', margin: '0 auto' }}>
+            <h1 style={{ fontSize: '2.4rem', marginBottom: '0.75rem' }}>
+              Chọn Nhánh Nghiệp Vụ Để Đi Xuyên Suốt
+            </h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem', maxWidth: '720px', margin: '0 auto 2.25rem', lineHeight: 1.6 }}>
+              Khi bạn chọn một nhánh chuyên ngành dưới đây, toàn bộ <strong>Tài liệu Case Study</strong>, <strong>Phòng Lab Công thức</strong> và <strong>Đề Thi Sát Hạch (Cơ bản → Trung cấp → Nâng cao)</strong> sẽ đi xuyên suốt theo nhánh đó. Sau khi hoàn thành 1 nhánh, bạn có thể chuyển sang chinh phục các nhánh tiếp theo!
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', textAlign: 'left' }}>
               {DOMAIN_LIST.map((dom) => (
                 <div
                   key={dom.id}
+                  onClick={() => void handleSelectDomain(dom.id, 'study')}
                   className="glass-card"
-                  style={{ padding: '1.5rem', borderTop: `4px solid ${dom.color}`, cursor: 'pointer' }}
-                  onClick={() => {
-                    setLabConfig({ domain: dom.id, level: 'Basic' });
-                    setView('lab');
+                  style={{
+                    padding: '1.75rem',
+                    borderTop: `5px solid ${dom.color}`,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    transition: 'transform 0.2s',
                   }}
                 >
-                  <div style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>{dom.badge}</div>
-                  <div style={{ fontWeight: 800, fontSize: '1.08rem', color: dom.color, marginBottom: '0.4rem' }}>{dom.name}</div>
-                  <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.55 }}>{dom.description}</div>
+                  <div>
+                    <div style={{ fontSize: '2.2rem', marginBottom: '0.75rem' }}>{dom.badge}</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.15rem', color: dom.color, marginBottom: '0.5rem' }}>{dom.name}</div>
+                    <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.55, marginBottom: '1.5rem' }}>{dom.description}</div>
+                  </div>
+                  <button
+                    className="btn btn-primary"
+                    style={{ width: '100%', background: dom.color, padding: '0.75rem', fontWeight: 800 }}
+                  >
+                    Chọn nhánh {dom.shortName} →
+                  </button>
                 </div>
               ))}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', position: 'relative' }}>
+      <Navbar onNav={setView} user={user} activeDomain={activeDomain} onLogout={handleLogout} />
+      <AnimatePresence mode="wait">
+        {view === 'home' && (
+          <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="container" style={{ padding: '3.5rem 0' }}>
+            {/* Banner Nhánh Đang Theo Học Xuyên Suốt */}
+            <div
+              className="glass-card"
+              style={{
+                padding: '2.5rem',
+                marginBottom: '2.5rem',
+                borderTop: `5px solid ${currentDomMeta.color}`,
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.5rem' }}>
+                <div style={{ maxWidth: '680px' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', padding: '0.35rem 0.85rem', borderRadius: '999px', background: `${currentDomMeta.color}15`, color: currentDomMeta.color, fontWeight: 800, fontSize: '0.8rem', marginBottom: '0.85rem' }}>
+                    <span>{currentDomMeta.badge}</span>
+                    <span>NHÁNH ÔN LUYỆN XUYÊN SUỐT HIỆN TẠI</span>
+                  </div>
+                  <h1 style={{ fontSize: '2.5rem', marginBottom: '0.6rem', color: '#0f172a' }}>
+                    Lộ Trình Chuyên Ngành: <span style={{ color: currentDomMeta.color }}>{currentDomMeta.name}</span>
+                  </h1>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem', lineHeight: 1.6, marginBottom: '1.75rem' }}>
+                    {currentDomMeta.description} Đi xuyên suốt 3 bước dưới đây để hoàn thành trọn vẹn chứng nhận nhánh <strong>{currentDomMeta.shortName}</strong> trước khi mở rộng sang nhánh khác.
+                  </p>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <button
+                      className="btn btn-primary"
+                      style={{ background: currentDomMeta.color, padding: '0.85rem 1.5rem', fontWeight: 800 }}
+                      onClick={() => setView('study')}
+                    >
+                      1. Học Giáo trình & Case Study ({currentDomMeta.shortName})
+                    </button>
+                    <button
+                      className="btn"
+                      style={{ background: '#ecfdf5', color: '#059669', border: '2px solid #10b981', fontWeight: 800, padding: '0.85rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}
+                      onClick={() => {
+                        setLabConfig({ domain: activeDomain, level: 'Basic' });
+                        setView('lab');
+                      }}
+                    >
+                      <Terminal size={18} /> 2. Phòng Lab Công thức ({currentDomMeta.shortName})
+                    </button>
+                    <button
+                      className="btn"
+                      style={{ background: '#0f172a', color: 'white', padding: '0.85rem 1.5rem', fontWeight: 800 }}
+                      onClick={() => {
+                        setSelectedQuizDomain(activeDomain);
+                        setView('lessons');
+                      }}
+                    >
+                      3. Thi Sát hạch ({currentDomMeta.shortName}) →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.6rem', margin: 0 }}>Danh Sách 4 Nhánh Chuyên Ngành (Hoàn thành từng nhánh)</h2>
+                <p style={{ color: 'var(--text-muted)', margin: '0.35rem 0 0 0', fontSize: '0.95rem' }}>
+                  Bấm chọn nhánh bất kỳ để chuyển toàn bộ nội dung Ôn luyện, Phòng Lab và Bài Thi đi xuyên suốt theo nhánh đó.
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.25rem', textAlign: 'left' }}>
+              {DOMAIN_LIST.map((dom) => {
+                const isSelected = dom.id === activeDomain;
+                const domResults = userStats.filter((r) => (r.domain || 'accounting') === dom.id);
+                const levels: Level[] = ['Basic', 'Intermediate', 'Advanced'];
+                const passedCount = levels.filter((lvl) =>
+                  domResults.some((r) => r.level === lvl && r.score >= NUM_QUESTIONS[lvl] * 0.8)
+                ).length;
+                const isCompleted = passedCount === 3;
+
+                return (
+                  <div
+                    key={dom.id}
+                    className="glass-card"
+                    style={{
+                      padding: '1.6rem',
+                      borderTop: `5px solid ${dom.color}`,
+                      border: isSelected ? `2.5px solid ${dom.color}` : undefined,
+                      background: isCompleted ? '#f0fdf4' : isSelected ? `${dom.color}08` : 'white',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                        <span style={{ fontSize: '1.85rem' }}>{dom.badge}</span>
+                        {isCompleted ? (
+                          <span style={{ padding: '0.2rem 0.6rem', borderRadius: '999px', background: '#16a34a', color: 'white', fontSize: '0.72rem', fontWeight: 800 }}>
+                            🏆 HOÀN THÀNH (3/3)
+                          </span>
+                        ) : isSelected ? (
+                          <span style={{ padding: '0.2rem 0.6rem', borderRadius: '999px', background: dom.color, color: 'white', fontSize: '0.72rem', fontWeight: 800 }}>
+                            ĐANG HỌC XUYÊN SUỐT
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b' }}>
+                            Đạt {passedCount}/3 cấp độ
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontWeight: 800, fontSize: '1.1rem', color: dom.color, marginBottom: '0.4rem' }}>{dom.name}</div>
+                      <div style={{ fontSize: '0.86rem', color: 'var(--text-muted)', lineHeight: 1.55, marginBottom: '1.25rem' }}>{dom.description}</div>
+                    </div>
+                    <button
+                      onClick={() => void handleSelectDomain(dom.id)}
+                      className="btn"
+                      style={{
+                        width: '100%',
+                        background: isSelected ? dom.color : '#f1f5f9',
+                        color: isSelected ? 'white' : '#1e293b',
+                        fontWeight: 800,
+                        padding: '0.65rem',
+                      }}
+                    >
+                      {isSelected ? `✓ Đang đi theo nhánh ${dom.shortName}` : `Chọn đi xuyên suốt nhánh ${dom.shortName}`}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
         )}
         {view === 'study' && (
           <StudyView
             user={user}
+            activeDomain={activeDomain}
+            onSelectDomain={(dom) => void handleSelectDomain(dom)}
             onToggleProgress={handleToggleProgress}
-            onGoToQuiz={() => setView('lessons')}
+            onGoToQuiz={() => {
+              setSelectedQuizDomain(activeDomain);
+              setView('lessons');
+            }}
             onOpenFormulaLab={(domain, level) => {
+              void handleSelectDomain(domain);
               setLabConfig({ domain, level });
               setView('lab');
             }}
           />
         )}
-        {view === 'lab' && <FormulaLabView initialDomain={labConfig.domain} initialLevel={labConfig.level} />}
+        {view === 'lab' && (
+          <FormulaLabView
+            initialDomain={activeDomain}
+            initialLevel={labConfig.level}
+            onSelectDomain={(dom) => void handleSelectDomain(dom)}
+          />
+        )}
         {view === 'lessons' && (
           <div className="container" style={{ padding: '3.5rem 0' }}>
-            <h2 style={{ textAlign: 'center', marginBottom: '0.75rem', fontSize: '2.25rem' }}>Chọn Mảng Nghiệp Vụ & Cấp Độ Bài Thi</h2>
+            <h2 style={{ textAlign: 'center', marginBottom: '0.5rem', fontSize: '2.25rem' }}>
+              Sát Hạch Theo Nhánh: <span style={{ color: currentDomMeta.color }}>{currentDomMeta.badge} {currentDomMeta.name}</span>
+            </h2>
             <p style={{ textAlign: 'center', color: 'var(--text-muted)', maxWidth: '720px', margin: '0 auto 2rem' }}>
-              Mỗi câu hỏi đi kèm bảng dữ liệu mẫu thực tế trên Excel và kiểm tra các bẫy thường gặp (quên khóa <code>$</code>, sai tham số dò chính xác <code>0</code>, lệch kiểu Text/Number, đảo đối số <code>SUMIFS</code>).
+              Đề thi đi xuyên suốt theo nhánh <strong>{currentDomMeta.name}</strong> từ Cơ bản → Trung cấp → Nâng cao. Hoàn thành đạt ≥ 80% từng cấp độ để mở khóa cấp độ tiếp theo trong nhánh.
             </p>
 
-            {/* Bộ chọn Mảng Nghiệp Vụ cho Bài Thi */}
+            {/* Bộ chuyển nhánh nếu muốn đổi sang nhánh khác */}
             <div style={{ maxWidth: '900px', margin: '0 auto 2.5rem' }}>
-              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '0.75rem', textAlign: 'center' }}>
-                1. Chọn bối cảnh dữ liệu đề thi:
+              <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '0.75rem', textAlign: 'center' }}>
+                Nhánh chuyên ngành đang thi (bấm để chuyển sang nhánh khác nếu cần):
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(165px, 1fr))', gap: '0.75rem' }}>
-                <button
-                  onClick={() => setSelectedQuizDomain('all')}
-                  className="glass-card"
-                  style={{
-                    padding: '1rem',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    border: selectedQuizDomain === 'all' ? '2.5px solid var(--primary)' : '1px solid var(--border)',
-                    background: selectedQuizDomain === 'all' ? '#ecfdf5' : 'white',
-                  }}
-                >
-                  <div style={{ fontWeight: 800, fontSize: '0.98rem', color: selectedQuizDomain === 'all' ? 'var(--primary)' : '#0f172a' }}>
-                    🌐 Tất cả 4 mảng
-                  </div>
-                  <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.25rem' }}>
-                    Tổng hợp ngẫu nhiên đa phòng ban (248 câu)
-                  </div>
-                </button>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(185px, 1fr))', gap: '0.75rem' }}>
                 {DOMAIN_LIST.map((dom) => {
-                  const isSelected = selectedQuizDomain === dom.id;
+                  const isSelected = activeDomain === dom.id;
                   return (
                     <button
                       key={dom.id}
-                      onClick={() => setSelectedQuizDomain(dom.id)}
+                      onClick={() => void handleSelectDomain(dom.id)}
                       className="glass-card"
                       style={{
                         padding: '1rem',
@@ -2608,23 +2954,36 @@ const App = () => {
                 const levelChapters = STUDY_CHAPTERS_BY_LEVEL[lvl];
                 const isReady = levelChapters.every(ch => ch.sections.every(s => (user.progress || []).includes(s.id)));
                 const lockUntil = getActiveQuizLockUntil(user, lvl);
-                const isPermissionLocked = user.id !== 'admin' && ((lvl === 'Intermediate' && !user.permissions.canTakeIntermediate) || (lvl === 'Advanced' && !user.permissions.canTakeAdvanced));
-                const isProgressLocked = user.id !== 'admin' && !isReady;
+                const domResults = userStats.filter((r) => (r.domain || 'accounting') === activeDomain);
+                const passedDomBasic = domResults.some((r) => r.level === 'Basic' && r.score >= NUM_QUESTIONS['Basic'] * 0.8);
+                const passedDomInter = domResults.some((r) => r.level === 'Intermediate' && r.score >= NUM_QUESTIONS['Intermediate'] * 0.8);
+                const passedThisLevel = domResults.some((r) => r.level === lvl && r.score >= NUM_QUESTIONS[lvl] * 0.8);
+
+                const isPermissionLocked =
+                  user.role !== 'admin' &&
+                  ((lvl === 'Intermediate' && !passedDomBasic && !user.permissions.canTakeIntermediate) ||
+                    (lvl === 'Advanced' && !passedDomInter && !user.permissions.canTakeAdvanced));
+                const isProgressLocked = user.role !== 'admin' && !isReady;
                 const isExamLocked = Boolean(lockUntil);
                 const isLocked = isPermissionLocked || isProgressLocked || isExamLocked;
-                const domainLabel = selectedQuizDomain === 'all' ? 'Tất cả 4 mảng nghiệp vụ' : PRACTICE_DOMAINS[selectedQuizDomain].name;
+                const domainLabel = currentDomMeta.name;
                 return (
-                  <div key={lvl} className="glass-card" style={{ padding: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', opacity: isLocked ? 0.5 : 1 }}>
+                  <div key={lvl} className="glass-card" style={{ padding: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', opacity: isLocked ? 0.5 : 1, borderLeft: passedThisLevel ? '5px solid #16a34a' : `5px solid ${currentDomMeta.color}` }}>
                     <div style={{ flex: 1 }}>
-                        <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                           {isLocked && <Lock size={18} />}
                           Excel {LevelLabels[lvl]}
-                          <span style={{ fontSize: '0.8rem', padding: '0.2rem 0.65rem', borderRadius: '999px', background: '#f1f5f9', color: '#334155', fontWeight: 700 }}>
-                            {domainLabel}
+                          <span style={{ fontSize: '0.8rem', padding: '0.2rem 0.65rem', borderRadius: '999px', background: `${currentDomMeta.color}15`, color: currentDomMeta.color, fontWeight: 800 }}>
+                            {currentDomMeta.badge} {domainLabel}
                           </span>
+                          {passedThisLevel && (
+                            <span style={{ fontSize: '0.75rem', padding: '0.2rem 0.6rem', borderRadius: '999px', background: '#dcfce7', color: '#166534', fontWeight: 800 }}>
+                              ✓ ĐÃ ĐẠT NHÁNH NÀY
+                            </span>
+                          )}
                         </h3>
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.35rem' }}>
-                          {NUM_QUESTIONS[lvl]} câu hỏi thực chiến có bảng dữ liệu mẫu — {isExamLocked ? '🔒 Đang bị khóa thi' : (isPermissionLocked ? '🔒 Cần đạt cấp độ trước' : (isReady ? '✅ Sẵn sàng' : '🔒 Chưa hoàn thành tiến độ học'))}
+                          {NUM_QUESTIONS[lvl]} câu hỏi chuyên sâu nhánh {currentDomMeta.shortName} — {isExamLocked ? '🔒 Đang bị khóa thi' : (isPermissionLocked ? '🔒 Cần đạt cấp độ trước của nhánh' : (isReady ? '✅ Sẵn sàng thi' : '🔒 Chưa hoàn thành tiến độ học'))}
                         </p>
                         {isExamLocked && lockUntil && (
                           <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>
@@ -2632,7 +2991,18 @@ const App = () => {
                           </div>
                         )}
                     </div>
-                    <button className="btn btn-primary" disabled={isLocked} onClick={() => { setCurrentQuizLevel(lvl); setView('quiz'); }}>Bắt đầu thi →</button>
+                    <button
+                      className="btn btn-primary"
+                      style={{ background: currentDomMeta.color }}
+                      disabled={isLocked}
+                      onClick={() => {
+                        setSelectedQuizDomain(activeDomain);
+                        setCurrentQuizLevel(lvl);
+                        setView('quiz');
+                      }}
+                    >
+                      {passedThisLevel ? 'Thi lại cải thiện điểm →' : 'Bắt đầu thi →'}
+                    </button>
                   </div>
                 );
               })}
@@ -2643,18 +3013,25 @@ const App = () => {
           <Quiz 
             userId={user.id}
             level={currentQuizLevel}
-            domainFilter={selectedQuizDomain}
+            domainFilter={activeDomain}
             timeLimitMinutes={DB.getSettings().timeLimit[currentQuizLevel] || 30} 
             onPersistResult={persistQuizResult}
             onExit={exitQuizToProfile}
             onCancel={() => {
-              localStorage.removeItem(getQuizSessionKey(user.id, currentQuizLevel, selectedQuizDomain));
+              localStorage.removeItem(getQuizSessionKey(user.id, currentQuizLevel, activeDomain));
               setCurrentQuizLevel(null);
               setView('lessons');
             }} 
           />
         )}
-        {view === 'profile' && <ProfileView user={user} stats={userStats} />}
+        {view === 'profile' && (
+          <ProfileView
+            user={user}
+            stats={userStats}
+            activeDomain={activeDomain}
+            onSelectDomain={(dom) => void handleSelectDomain(dom, 'study')}
+          />
+        )}
         {view === 'leaderboard' && <Leaderboard currentUserId={user.id} />}
         {view === 'admin' && user.role === 'admin' && <AdminDashboard />}
       </AnimatePresence>

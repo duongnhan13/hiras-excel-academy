@@ -1,10 +1,12 @@
 export type UserApprovalStatus = 'pending' | 'approved' | 'rejected';
+export type UserTrackDomain = 'accounting' | 'sales' | 'inventory' | 'hr_ops';
 
 export interface User {
   id: string;
   name: string;
   role: 'admin' | 'user';
   status?: UserApprovalStatus;
+  activeDomain?: UserTrackDomain;
   createdAt?: string;
   permissions: {
     canTakeBasic: boolean;
@@ -25,6 +27,7 @@ export interface QuizResult {
   id: string;
   userId: string;
   level: string;
+  domain?: UserTrackDomain;
   score: number;
   total: number;
   date: string;
@@ -40,6 +43,7 @@ interface DatabaseShape {
 type MutationRequest =
   | { type: 'addUser'; payload: { user: User } }
   | { type: 'updateUserStatus'; payload: { id: string; status: UserApprovalStatus } }
+  | { type: 'updateUserDomain'; payload: { id: string; activeDomain: UserTrackDomain } }
   | { type: 'updateUserPermissions'; payload: { id: string; permissions: User['permissions'] } }
   | { type: 'updateUserPassword'; payload: { id: string; password: string } }
   | { type: 'lockUser'; payload: { id: string; level: string; lockDays: number; nextCount: number; expiresAt: string } }
@@ -53,34 +57,12 @@ type MutationRequest =
 const DEFAULT_USERS: User[] = [
   {
     id: 'admin',
-    name: 'Quan tri vien',
+    name: 'Quản trị viên',
     role: 'admin',
     status: 'approved',
     permissions: { canTakeBasic: true, canTakeIntermediate: true, canTakeAdvanced: true },
     progress: [],
     password: 'admin',
-    lockOuts: {},
-    lockOutCounts: {},
-  },
-  {
-    id: 'NV001',
-    name: 'Nguyen Van A',
-    role: 'user',
-    status: 'approved',
-    permissions: { canTakeBasic: true, canTakeIntermediate: false, canTakeAdvanced: false },
-    progress: [],
-    password: '123',
-    lockOuts: {},
-    lockOutCounts: {},
-  },
-  {
-    id: 'NV002',
-    name: 'Tran Thi B',
-    role: 'user',
-    status: 'approved',
-    permissions: { canTakeBasic: true, canTakeIntermediate: true, canTakeAdvanced: false },
-    progress: [],
-    password: '123',
     lockOuts: {},
     lockOutCounts: {},
   },
@@ -172,7 +154,7 @@ const normalizeData = (raw: any): DatabaseShape => {
   };
 };
 
-const LOCAL_FALLBACK_KEY = 'hiras_cloud_fallback_db';
+const LOCAL_FALLBACK_KEY = 'hiras_cloud_fallback_db_v2';
 
 const readLocalFallback = (): DatabaseShape | null => {
   try {
@@ -344,6 +326,17 @@ export const DB = {
     const updatedUser = cloneUser(data.users[index]);
     setCachedData(data);
     await mutateServer({ type: 'updateUserStatus', payload: { id, status } });
+    return updatedUser;
+  },
+  updateUserDomain: async (id: string, activeDomain: UserTrackDomain) => {
+    const data = cloneData(getCachedData());
+    const index = data.users.findIndex((user) => user.id === id);
+    if (index === -1) return undefined;
+
+    data.users[index].activeDomain = activeDomain;
+    const updatedUser = cloneUser(data.users[index]);
+    setCachedData(data);
+    await mutateServer({ type: 'updateUserDomain', payload: { id, activeDomain } });
     return updatedUser;
   },
   updateUserPermissions: async (id: string, permissions: User['permissions']) => {

@@ -21,7 +21,7 @@ export const onRequestPost = async (context: { request: Request; env: Cloudflare
   try {
     const incoming = (await context.request.json()) as Partial<DbState>;
     const saved = await writeCloudDb(context.env, incoming as DbState);
-    return new Response(JSON.stringify({ success: true, data: saved }), {
+    return new Response(JSON.stringify(saved), {
       status: 200,
       headers: jsonHeaders,
     });

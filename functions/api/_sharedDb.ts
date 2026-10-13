@@ -2,6 +2,7 @@ import seedDb from '../../db.json';
 
 export type Level = 'Basic' | 'Intermediate' | 'Advanced';
 export type UserApprovalStatus = 'pending' | 'approved' | 'rejected';
+export type UserTrackDomain = 'accounting' | 'sales' | 'inventory' | 'hr_ops';
 
 export interface UserPermissions {
   canTakeBasic: boolean;
@@ -15,17 +16,19 @@ export interface User {
   password?: string;
   role: 'admin' | 'user';
   status?: UserApprovalStatus;
+  activeDomain?: UserTrackDomain;
   createdAt?: string;
   permissions: UserPermissions;
   progress: string[];
-  lockOuts?: Partial<Record<Level, string>>;
-  lockOutCounts?: Partial<Record<Level, number>>;
+  lockOuts?: Record<string, string>;
+  lockOutCounts?: Record<string, number>;
 }
 
 export interface QuizResult {
   id: string;
   userId: string;
-  level: Level;
+  level: string;
+  domain?: UserTrackDomain;
   score: number;
   total: number;
   date: string;
@@ -33,7 +36,7 @@ export interface QuizResult {
 }
 
 export interface QuizSettings {
-  timeLimit: Record<Level, number>;
+  timeLimit: Record<string, number>;
 }
 
 export interface DbState {
@@ -49,7 +52,7 @@ export interface CloudflareEnv {
   };
 }
 
-const KV_KEY = 'hiras_excel_db_v1';
+const KV_KEY = 'hiras_excel_db_v2';
 
 const defaultSettings: QuizSettings = {
   timeLimit: {
@@ -70,12 +73,27 @@ export const normalizeSettings = (settings?: Partial<QuizSettings>): QuizSetting
 });
 
 export const normalizeDbState = (raw?: Partial<DbState> | null): DbState => ({
-  users: Array.isArray(raw?.users)
+  users: Array.isArray(raw?.users) && raw.users.length > 0
     ? raw.users.map((u) => ({
         ...u,
         status: u.role === 'admin' ? 'approved' : (u.status ?? 'approved'),
+        progress: Array.isArray(u.progress) ? u.progress : [],
+        lockOuts: u.lockOuts ? { ...u.lockOuts } : {},
+        lockOutCounts: u.lockOutCounts ? { ...u.lockOutCounts } : {},
       }))
-    : [],
+    : [
+        {
+          id: 'admin',
+          name: 'Quản trị viên',
+          role: 'admin',
+          status: 'approved',
+          permissions: { canTakeBasic: true, canTakeIntermediate: true, canTakeAdvanced: true },
+          progress: [],
+          password: 'admin',
+          lockOuts: {},
+          lockOutCounts: {},
+        },
+      ],
   results: Array.isArray(raw?.results) ? raw.results : [],
   settings: normalizeSettings(raw?.settings),
 });
@@ -113,7 +131,7 @@ export const writeCloudDb = async (env: CloudflareEnv, state: DbState): Promise<
   return normalized;
 };
 
-export const applyCloudMutation = (current: DbState, payload: any): DbState => {
+export const applyCloudMutation = (current: DbState, request: any): DbState => {
   const next: DbState = {
     users: current.users.map((user) => ({
       ...user,
@@ -126,7 +144,9 @@ export const applyCloudMutation = (current: DbState, payload: any): DbState => {
     settings: normalizeSettings(current.settings),
   };
 
-  switch (payload?.type) {
+  const payload = request?.payload ?? request ?? {};
+
+  switch (request?.type) {
     case 'addUser': {
       const incoming = payload.user as User | undefined;
       if (!incoming?.id || !incoming?.name) return next;
@@ -158,10 +178,18 @@ export const applyCloudMutation = (current: DbState, payload: any): DbState => {
       }
       return next;
     }
+    case 'updateUserDomain': {
+      const user = next.users.find((item) => item.id === payload.id);
+      if (user && payload.activeDomain) {
+        user.activeDomain = payload.activeDomain;
+      }
+      return next;
+    }
     case 'updateUserPassword': {
       const user = next.users.find((item) => item.id === payload.id);
-      if (user && typeof payload.newPass === 'string' && payload.newPass) {
-        user.password = payload.newPass;
+      const nextPass = payload.password ?? payload.newPass;
+      if (user && typeof nextPass === 'string' && nextPass) {
+        user.password = nextPass;
       }
       return next;
     }
@@ -181,19 +209,20 @@ export const applyCloudMutation = (current: DbState, payload: any): DbState => {
       }
       return next;
     }
-    case 'setLockOut': {
+    case 'lockUser': {
       const user = next.users.find((item) => item.id === payload.id);
-      const level = payload.level as Level | undefined;
-      if (user && level) {
+      if (user && payload.level) {
         user.lockOuts = user.lockOuts || {};
         user.lockOutCounts = user.lockOutCounts || {};
-        if (payload.isoDate) {
-          user.lockOuts[level] = payload.isoDate;
-          user.lockOutCounts[level] = (user.lockOutCounts[level] || 0) + 1;
-        } else {
-          delete user.lockOuts[level];
-          user.lockOutCounts[level] = 0;
-        }
+        user.lockOutCounts[payload.level] = payload.nextCount;
+        user.lockOuts[payload.level] = payload.expiresAt;
+      }
+      return next;
+    }
+    case 'unlockUser': {
+      const user = next.users.find((item) => item.id === payload.id);
+      if (user?.lockOuts && payload.level) {
+        delete user.lockOuts[payload.level];
       }
       return next;
     }
@@ -219,18 +248,17 @@ export const applyCloudMutation = (current: DbState, payload: any): DbState => {
       }
       return next;
     }
+    case 'saveResult':
     case 'addResult': {
       const result = payload.result as QuizResult | undefined;
       if (!result?.userId || !result?.level) return next;
-      next.results.push({
+      const nextResult = {
         ...result,
         id: result.id || Date.now().toString(),
         date: result.date || new Date().toISOString(),
-      });
-      const user = next.users.find((item) => item.id === result.userId);
-      if (user && result.total > 0 && result.score / result.total >= 0.8) {
-        if (result.level === 'Basic') user.permissions.canTakeIntermediate = true;
-        if (result.level === 'Intermediate') user.permissions.canTakeAdvanced = true;
+      };
+      if (!next.results.some((item) => item.id === nextResult.id)) {
+        next.results.push(nextResult);
       }
       return next;
     }
