@@ -1,0 +1,10 @@
+HUONG DAN KHOI CHAY UNG DUNG
+===========================
+
+1. Click dup vao file `start.bat` de khoi dong ung dung.
+2. Ung dung se mac dinh chay tai dia chi: http://localhost:5173
+3. Neu cong 5173 da bi chiem boi ung dung khac, he thong se tu dong chuyen sang 5174, 5175... (khong gay xung dot).
+
+Luu y:
+- Dam bao ban da cai dat NodeJS.
+- Neu la lan dau chay, hay mo Terminal tai day va go `npm install` truoc.

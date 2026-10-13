@@ -1,0 +1,13 @@
+name = "hiras-excel-academy"
+pages_build_output_dir = "dist"
+compatibility_date = "2024-11-01"
+
+# Hướng dẫn kết nối Database lâu dài trên Cloudflare Pages (KV Namespace):
+# 1. Vào Cloudflare Dashboard -> Workers & Pages -> KV -> Create a namespace tên là: EXCEL_DB
+# 2. Vào project Pages của bạn -> Settings -> Functions -> KV namespace bindings:
+#    - Variable name: EXCEL_DB
+#    - KV namespace: chọn EXCEL_DB vừa tạo
+# (Hoặc mở comment dòng dưới và điền id của KV namespace khi deploy qua Wrangler CLI)
+# [[kv_namespaces]]
+# binding = "EXCEL_DB"
+# id = "YOUR_KV_NAMESPACE_ID"
